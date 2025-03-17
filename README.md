@@ -15,13 +15,15 @@
     <p id="wallet-status">Wallet not connected</p>
 
     <!-- Payment Section -->
-    <button id="buy-btn" disabled>Buy Tokens</button>
+    <button id="pay-stripe-btn" disabled>Pay with Stripe</button>
+    <button id="pay-solana-btn" disabled>Pay with Solana</button>
     <p id="payment-message"></p>
   </div>
 
   <script src="https://js.stripe.com/v3/"></script>
   <script src="app.js"></script>
 </body>
+</html>
 /* General Styles */
 * {
   margin: 0;
@@ -86,7 +88,8 @@ p {
 }
 document.addEventListener('DOMContentLoaded', () => {
   const connectBtn = document.getElementById('connect-wallet-btn');
-  const buyBtn = document.getElementById('buy-btn');
+  const payStripeBtn = document.getElementById('pay-stripe-btn');
+  const paySolanaBtn = document.getElementById('pay-solana-btn');
   const walletStatus = document.getElementById('wallet-status');
   const paymentMessage = document.getElementById('payment-message');
 
@@ -104,10 +107,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (address) {
       const displayAddress = `${address.slice(0, 4)}...${address.slice(-4)}`;
       walletStatus.textContent = `Connected: ${displayAddress}`;
-      buyBtn.disabled = false;
+      payStripeBtn.disabled = false;
+      paySolanaBtn.disabled = false;
     } else {
       walletStatus.textContent = 'Wallet not connected';
-      buyBtn.disabled = true;
+      payStripeBtn.disabled = true;
+      paySolanaBtn.disabled = true;
     }
   }
 
@@ -139,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Handle token purchase via Stripe
-  async function purchaseTokens() {
+  async function purchaseTokensWithStripe() {
     if (!userWalletAddress) {
       alert('Please connect your Solana wallet first.');
       return;
@@ -147,8 +152,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isProcessing) return; // Prevent multiple clicks
     isProcessing = true;
 
-    toggleLoading(buyBtn, true, 'Processing payment...');
-    paymentMessage.textContent = 'Processing payment...';
+    toggleLoading(payStripeBtn, true, 'Processing payment...');
+    paymentMessage.textContent = 'Processing payment via Stripe...';
     paymentMessage.style.color = 'blue';
 
     try {
@@ -164,11 +169,57 @@ document.addEventListener('DOMContentLoaded', () => {
       const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
       if (error) throw error;
     } catch (err) {
-      console.error('Payment failed:', err);
+      console.error('Stripe payment failed:', err);
       paymentMessage.textContent = 'Payment error: ' + err.message;
       paymentMessage.style.color = 'red';
     } finally {
-      toggleLoading(buyBtn, false, 'Buy Tokens');
+      toggleLoading(payStripeBtn, false, 'Pay with Stripe');
+      isProcessing = false;
+    }
+  }
+
+  // Handle token purchase via Solana
+  async function purchaseTokensWithSolana() {
+    if (!userWalletAddress) {
+      alert('Please connect your Solana wallet first.');
+      return;
+    }
+    if (isProcessing) return; // Prevent multiple clicks
+    isProcessing = true;
+
+    toggleLoading(paySolanaBtn, true, 'Processing payment...');
+    paymentMessage.textContent = 'Processing payment via Solana...';
+    paymentMessage.style.color = 'blue';
+
+    try {
+      // Check if Phantom Wallet is connected
+      const wallet = window.solana;
+      if (!wallet) {
+        alert('Phantom Wallet not connected!');
+        return;
+      }
+
+      // Create the transaction on the Solana network
+      const connection = new Connection("https://api.mainnet-beta.solana.com", "confirmed");
+      const transaction = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: wallet.publicKey, // User's public key
+          toPubkey: new PublicKey('TARGET_WALLET_ADDRESS'), // Replace with your receiving wallet address
+          lamports: 1000000000, // 1 SOL = 1 billion lamports (adjust amount as needed)
+        })
+      );
+
+      // Sign and send the transaction
+      const signature = await wallet.signAndSendTransaction(transaction);
+      await connection.confirmTransaction(signature);
+
+      paymentMessage.textContent = 'Payment successful via Solana!';
+    } catch (err) {
+      console.error('Solana payment failed:', err);
+      paymentMessage.textContent = 'Payment error: ' + err.message;
+      paymentMessage.style.color = 'red';
+    } finally {
+      toggleLoading(paySolanaBtn, false, 'Pay with Solana');
       isProcessing = false;
     }
   }
@@ -182,7 +233,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Attach event listeners
   connectBtn.addEventListener('click', connectWallet);
-  buyBtn.addEventListener('click', purchaseTokens);
+  payStripeBtn.addEventListener('click', purchaseTokensWithStripe);
+  paySolanaBtn.addEventListener('click', purchaseTokensWithSolana);
 
   // Set initial wallet status
   updateWalletStatus(null);
