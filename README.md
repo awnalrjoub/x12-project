@@ -1,3 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>X12 Token Purchase</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>X12 Token Purchase</h1>
+
+    <!-- Wallet Connection -->
+    <button id="connect-wallet-btn">Connect Wallet</button>
+    <p id="wallet-status">Wallet not connected</p>
+
+    <!-- Payment Section -->
+    <button id="buy-btn" disabled>Buy Tokens</button>
+    <p id="payment-message"></p>
+  </div>
+
+  <script src="https://js.stripe.com/v3/"></script>
+  <script src="app.js"></script>
+</body>
+/* General Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #f0f4f8;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  text-align: center;
+  background-color: #fff;
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  width: 300px;
+}
+
+h1 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 10px 0;
+  width: 100%;
+}
+
+button:disabled {
+  background-color: #ddd;
+  cursor: not-allowed;
+}
+
+button:hover:not(:disabled) {
+  background-color: #45a049;
+}
+
+p {
+  color: #333;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+#payment-message {
+  font-size: 14px;
+  color: blue;
+}
 document.addEventListener('DOMContentLoaded', () => {
   const connectBtn = document.getElementById('connect-wallet-btn');
   const buyBtn = document.getElementById('buy-btn');
