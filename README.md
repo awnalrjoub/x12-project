@@ -1,4 +1,3 @@
-# X12 Meme Coin Project
 document.addEventListener('DOMContentLoaded', () => {
   const connectBtn = document.getElementById('connect-wallet-btn');
   const buyBtn = document.getElementById('buy-btn');
@@ -6,64 +5,64 @@ document.addEventListener('DOMContentLoaded', () => {
   const paymentMessage = document.getElementById('payment-message');
 
   let userWalletAddress = null;
-  let isProcessing = false; // لمنع النقر المتكرر
+  let isProcessing = false; // Prevent multiple clicks
 
-  // تهيئة Stripe بالمفتاح العام (استبدله بمفتاحك)
+  // Initialize Stripe with the public key (Replace with your key)
   const stripe = Stripe('YOUR_STRIPE_PUBLISHABLE_KEY');
 
-  // التحقق من وجود محفظة Phantom
+  // Check if Phantom Wallet is installed
   const isPhantomInstalled = () => window.solana?.isPhantom;
 
-  // تحديث حالة المحفظة في الواجهة
+  // Update wallet status in the UI
   function updateWalletStatus(address) {
     if (address) {
-      const displayAddress = ${address.slice(0, 4)}...${address.slice(-4)};
-      walletStatus.textContent = متصل: ${displayAddress};
+      const displayAddress = `${address.slice(0, 4)}...${address.slice(-4)}`;
+      walletStatus.textContent = `Connected: ${displayAddress}`;
       buyBtn.disabled = false;
     } else {
-      walletStatus.textContent = 'لم يتم الاتصال بالمحفظة';
+      walletStatus.textContent = 'Wallet not connected';
       buyBtn.disabled = true;
     }
   }
 
-  // وظيفة لعرض وإخفاء مؤشر التحميل (Loader)
+  // Function to toggle loading indicator
   function toggleLoading(button, isLoading, defaultText) {
     button.disabled = isLoading;
-    button.textContent = isLoading ? 'جارٍ المعالجة...' : defaultText;
+    button.textContent = isLoading ? 'Processing...' : defaultText;
   }
 
-  // الاتصال بمحفظة Phantom
+  // Connect to Phantom Wallet
   async function connectWallet() {
     if (!isPhantomInstalled()) {
-      alert('لم يتم العثور على محفظة Phantom. الرجاء تثبيتها أولًا.');
+      alert('Phantom Wallet not detected. Please install it first.');
       return;
     }
 
-    toggleLoading(connectBtn, true, 'اتصل بالمحفظة');
+    toggleLoading(connectBtn, true, 'Connecting...');
 
     try {
       const response = await window.solana.connect();
       userWalletAddress = response.publicKey.toString();
       updateWalletStatus(userWalletAddress);
     } catch (err) {
-      console.error('فشل الاتصال بالمحفظة:', err);
-      alert('فشل الاتصال بالمحفظة. الرجاء المحاولة مرة أخرى.');
+      console.error('Failed to connect to wallet:', err);
+      alert('Failed to connect. Please try again.');
     } finally {
-      toggleLoading(connectBtn, false, 'اتصل بالمحفظة');
+      toggleLoading(connectBtn, false, 'Connect Wallet');
     }
   }
 
-  // تنفيذ عملية الشراء عبر Stripe
+  // Handle token purchase via Stripe
   async function purchaseTokens() {
     if (!userWalletAddress) {
-      alert('الرجاء الاتصال بمحفظة Solana أولاً.');
+      alert('Please connect your Solana wallet first.');
       return;
     }
-    if (isProcessing) return; // منع النقر المتكرر
+    if (isProcessing) return; // Prevent multiple clicks
     isProcessing = true;
 
-    toggleLoading(buyBtn, true, 'اشترِ التوكنات');
-    paymentMessage.textContent = 'جارٍ معالجة الدفع...';
+    toggleLoading(buyBtn, true, 'Processing payment...');
+    paymentMessage.textContent = 'Processing payment...';
     paymentMessage.style.color = 'blue';
 
     try {
@@ -79,26 +78,26 @@ document.addEventListener('DOMContentLoaded', () => {
       const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
       if (error) throw error;
     } catch (err) {
-      console.error('فشل الدفع:', err);
-      paymentMessage.textContent = 'حدث خطأ أثناء الدفع: ' + err.message;
+      console.error('Payment failed:', err);
+      paymentMessage.textContent = 'Payment error: ' + err.message;
       paymentMessage.style.color = 'red';
     } finally {
-      toggleLoading(buyBtn, false, 'اشترِ التوكنات');
+      toggleLoading(buyBtn, false, 'Buy Tokens');
       isProcessing = false;
     }
   }
 
-  // الاستماع إلى حدث فصل المحفظة
+  // Listen for wallet disconnection event
   window.solana?.on('disconnect', () => {
     userWalletAddress = null;
     updateWalletStatus(null);
-    alert('تم قطع الاتصال بالمحفظة.');
+    alert('Wallet disconnected.');
   });
 
-  // ربط الأزرار بالوظائف
+  // Attach event listeners
   connectBtn.addEventListener('click', connectWallet);
   buyBtn.addEventListener('click', purchaseTokens);
 
-  // ضبط الحالة الافتراضية
+  // Set initial wallet status
   updateWalletStatus(null);
-})
+});
